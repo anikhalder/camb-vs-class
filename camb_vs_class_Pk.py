@@ -37,7 +37,7 @@ lin_or_nl = sys.argv[2]
 ########################################
 
 # Note: c_min in CLASS is called A_baryon in CAMB (one of the two HMCode 2015/2016 parameters)
-# Order of the paramters for a given cosmology: [Omega_m, ln(10^10*As), w0, h, c_min, z]
+# Order of the parameters for a given cosmology: [Omega_m, ln(10^10*As), w0, h, c_min, z]
 
 cosmo_dict = {
     'LCDM' : [ 0.279,  3.044522437723423, -1.0,  0.7,  3.13, 0.5], # a standard LCDM like cosmology (with A_s = 2.1e-9)
