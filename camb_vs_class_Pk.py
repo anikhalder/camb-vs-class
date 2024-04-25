@@ -149,14 +149,21 @@ fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 2]}, sharex=Tru
 ax = axes[0]
 ax.plot(k, P_camb, color='b', label='camb')
 ax.plot(k, P_class, color='r', label='class')
-ax.set_ylabel('P(k) [Mpc^3]')
+ax.set_ylabel('P(k) [Mpc$^3$]')
 ax.set_xscale('log')
 ax.set_yscale('log')
-ax.set_title('Matter P(k) comparison for '+cosmology_name+' '+lin_or_nl);
+#ax.set_title('Matter P(k) comparison for '+cosmology_name+' '+lin_or_nl);
+if (lin_or_nl == 'linear'):
+    ax.set_title(r'$\Omega_m$={0:.3f}; $A_s$={1:.2E}; $w_0$={2:.2f}; h={3:.2f}; z={4:.2f}'.format(Omega_m, A_s, w0, h, z_test));
+elif (lin_or_nl == 'nonlinear'):
+    ax.set_title(r'$\Omega_m$={0:.3f}; $A_s$={1:.2E}; $w_0$={2:.2f}; h={3:.2f}; $A_b$={4:.2f}; z={5:.2f}'.format(Omega_m, A_s, w0, h, c_min, z_test));
+else:
+    raise NotImplementedError
+
 ax.legend()
 
 ax = axes[1]
-ax.plot(k, np.abs((P_camb/P_class - 1)), color='b', label='camb/class - 1')
+ax.plot(k, np.abs((P_camb/P_class - 1)), color='k', label='camb/class - 1')
 ax.axhline(0.01, c='grey', ls='dashed')
 ax.set_xlabel('k [Mpc]')
 ax.set_ylabel('Abs frac. diff')
