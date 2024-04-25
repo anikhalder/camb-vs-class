@@ -1,7 +1,7 @@
 # camb-vs-class
 Scripts to compare quantities between CAMB and CLASS
 
-First, please make sure to install the python packages of these two software. See installation instructions in these links:
+First, please make sure to install the python packages of these two codes. See installation instructions in these links:
 
 CAMB: https://camb.readthedocs.io/en/latest/
 
