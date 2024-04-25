@@ -23,6 +23,8 @@ import camb
 import classy
 from classy import Class
 
+from scipy.interpolate import interp1d
+
 ########################################
 # Read terminal arguments
 ########################################
@@ -42,9 +44,10 @@ print('\nPerforming computations at node '+cosmology_name+' for '+lin_or_nl+' po
 cosmo_dict = {
     'LCDM' : [ 0.279,  3.044522437723423, -1.0,  0.7,  3.13, 0.5], # a standard LCDM like cosmology (with A_s = 2.1e-9)
     'test1' : [ 0.12836942,  3.22501109, -2.34029847,  0.57573668,  3.38315697, 2.04090028],
-    'test2' : [ 0.13063248,  3.36214195, -2.71867168,  0.58195185,  3.70005089,  0.0433379 ],
-    'test3' : [ 0.13051834,  4.16525975, -1.96813609,  0.56149989,  5.34963737,  0.25553606],
+    'test2' : [ 0.13063248,  3.36214195, -2.71867168,  0.58195185,  3.70005089, 0.0433379 ],
+    'test3' : [ 0.13051834,  4.16525975, -1.96813609,  0.56149989,  5.34963737, 0.25553606],
     'test4' : [ 0.13003067,  3.96725238, -1.91138158,  0.69027659,  1.66192719, 0.13685009],
+    'test5' : [ 0.12896307,  3.66831821, -2.42087895,  0.75176987,  4.99248774, 0.37852519],
 }
 
 cosmo_params = cosmo_dict[cosmology_name]
@@ -74,6 +77,8 @@ omega_cdm = Omega_cdm*h**2
 pk_max = 130.0
 kmax = 100.0
 
+l_array = np.unique(np.logspace(np.log10(2), np.log10(15000), 113).astype(int))
+
 ########################################
 #  CAMB
 ########################################
@@ -97,6 +102,13 @@ results = camb.get_results(pars)
 kh, z, pk_h = results.get_matter_power_spectrum(minkh=1e-4/h, maxkh=kmax/h, npoints=200)
 k = kh*h # Mpc^-1
 P_camb = pk_h[0]/h**3
+
+chi_z_test_camb = results.comoving_radial_distance(z_test)
+print('Comoving distance at z={0:.3f} using CAMB : {1:.4f} Mpc'.format(z_test, chi_z_test_camb))
+
+camb_pk = interp1d(k, P_camb)
+k_array_camb = l_array / chi_z_test_camb
+Pl_camb = np.array([camb_pk(ki) for ki in k_array_camb])
 
 end = time.time()
 print('Time taken for execution of CAMB (seconds):', end - start) 
@@ -130,19 +142,35 @@ cosmo_class = Class()
 cosmo_class.set(commonsettings_nl)
 cosmo_class.compute()
 
+chi_z_test_class = cosmo_class.comoving_distance(z_test)
+print('Comoving distance at z={0:.3f} using CLASS : {1:.4f} Mpc'.format(z_test, chi_z_test_class))
+
+k_array_class = l_array / chi_z_test_camb
+
 if (lin_or_nl == 'linear'):
     P_class = np.array([cosmo_class.pk_lin(ki, z_test) for ki in k]) # linear power spectrum
+    Pl_class = np.array([cosmo_class.pk_lin(ki) for ki in k_array_class])
 elif (lin_or_nl == 'nonlinear'):
     P_class = np.array([cosmo_class.pk(ki, z_test) for ki in k]) # nonlinear power spectrum
+    Pl_class = np.array([cosmo_class.pk(ki) for ki in k_array_class])
 else:
     raise NotImplementedError
 
 end = time.time()
 print('Time taken for execution of CLASS (seconds):', end - start) 
 
+print('\nFractional difference between comoving distance computed by CAMB and CLASS:', chi_z_test_camb/chi_z_test_class - 1) 
+
+print('\nk value corresponding to l={0} : {1:.4f} Mpc^-1'.format(l_array[0], k_array_class[0]))
+print('k value corresponding to l={0} : {1:.4f} Mpc^-1'.format(l_array[-1], k_array_class[-1]))
+
 ########################################
 #  Plots
 ########################################
+
+##########
+#  P(k)
+##########
 
 fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 2]}, sharex=True)
 
@@ -152,7 +180,6 @@ ax.plot(k, P_class, color='r', label='class')
 ax.set_ylabel('P(k) [Mpc$^3$]')
 ax.set_xscale('log')
 ax.set_yscale('log')
-#ax.set_title('Matter P(k) comparison for '+cosmology_name+' '+lin_or_nl);
 if (lin_or_nl == 'linear'):
     ax.set_title(r'$\Omega_m$={0:.3f}; $A_s$={1:.2E}; $w_0$={2:.2f}; h={3:.2f}; z={4:.2f}'.format(Omega_m, A_s, w0, h, z_test));
 elif (lin_or_nl == 'nonlinear'):
@@ -160,6 +187,8 @@ elif (lin_or_nl == 'nonlinear'):
 else:
     raise NotImplementedError
 
+ax.axvline(k_array[0], color='g', ls='dotted')
+ax.axvline(k_array[-1], color='g', ls='dotted')
 ax.legend()
 
 ax = axes[1]
@@ -170,9 +199,46 @@ ax.set_ylabel('Abs frac. diff')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylim([1e-6,1e-1])
+ax.axvline(k_array[0], color='g', ls='dotted')
+ax.axvline(k_array[-1], color='g', ls='dotted')
 ax.legend(loc='upper left')
 
 plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'.png')
+
+'''
+##########
+#  P(l)
+##########
+
+fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 2]}, sharex=True)
+
+ax = axes[0]
+ax.plot(l_array, P_camb, color='b', label='camb')
+ax.plot(l_array, P_class, color='r', label='class')
+ax.set_ylabel('P(l) [Mpc$^3$]')
+ax.set_xscale('log')
+ax.set_yscale('log')
+if (lin_or_nl == 'linear'):
+    ax.set_title(r'$\Omega_m$={0:.3f}; $A_s$={1:.2E}; $w_0$={2:.2f}; h={3:.2f}; z={4:.2f}'.format(Omega_m, A_s, w0, h, z_test));
+elif (lin_or_nl == 'nonlinear'):
+    ax.set_title(r'$\Omega_m$={0:.3f}; $A_s$={1:.2E}; $w_0$={2:.2f}; h={3:.2f}; $A_b$={4:.2f}; z={5:.2f}'.format(Omega_m, A_s, w0, h, c_min, z_test));
+else:
+    raise NotImplementedError
+
+ax.legend()
+
+ax = axes[1]
+ax.plot(l_array, np.abs((P_camb/P_class - 1)), color='k', label='camb/class - 1')
+ax.axhline(0.01, c='grey', ls='dashed')
+ax.set_xlabel('l')
+ax.set_ylabel('Abs frac. diff')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylim([1e-6,1e-1])
+ax.legend(loc='upper left')
+
+plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'_Pl.png')
+'''
 
 end_program = time.time()
 print('\nTime taken for execution of the whole script (seconds):', end_program - start_program) 
