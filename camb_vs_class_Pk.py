@@ -82,7 +82,7 @@ start = time.time()
 
 print('\nUsing CAMB version %s installed at %s'%(camb.__version__,os.path.dirname(camb.__file__)))
 
-pars = camb.set_params(H0=100*h, ombh2=omega_b, omch2=omega_cdm,  As=A_s, ns=n_s, w=w0, halofit_version='mead', HMCode_A_baryon=c_min, HMCode_eta_baryon=eta_0,
+pars = camb.set_params(H0=100*h, ombh2=omega_b, omch2=omega_cdm,  As=A_s, ns=n_s, w=w0, halofit_version='mead2015', HMCode_A_baryon=c_min, HMCode_eta_baryon=eta_0,
      num_massive_neutrinos=0, mnu=0.0)
 pars.set_matter_power(redshifts=[z_test], kmax=pk_max)
 
