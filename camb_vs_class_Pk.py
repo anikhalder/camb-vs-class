@@ -6,11 +6,11 @@
 #
 # where,
 # <cosmology_name> = LCDM, test1, test2 or whatever the name of your desired cosmology as defined in the cosmo_dict (see below)
-# <lin_or_nl> = lin or nl (equivalently, linear or nonlinear) --> for linear or nonlinear power spectrum
+# <lin_or_nl> = linear or nonlinear --> for linear or nonlinear power spectrum
 #
 # Example call from the terminal:
 #
-# python camb_vs_class_Pk.py LCDM lin
+# python camb_vs_class_Pk.py LCDM linear
 
 import time
 start_program = time.time()
@@ -84,11 +84,11 @@ pars = camb.set_params(H0=100*h, ombh2=omega_b, omch2=omega_cdm,  As=A_s, ns=n_s
      num_massive_neutrinos=0, mnu=0.0)
 pars.set_matter_power(redshifts=[z_test], kmax=pk_max)
 
-if (lin_or_nl == 'lin' or lin_or_nl == 'linear'):
+if (lin_or_nl == 'linear'):
     # linear power spectrum
     pars.NonLinear = camb.model.NonLinear_none
 
-elif (lin_or_nl == 'nl' or lin_or_nl == 'nonlinear'):
+elif (lin_or_nl == 'nonlinear'):
     # nonlinear power spectrum
     pars.NonLinear = camb.model.NonLinear_both
 
@@ -129,10 +129,10 @@ cosmo_class = Class()
 cosmo_class.set(commonsettings_nl)
 cosmo_class.compute()
 
-if (lin_or_nl == 'lin'):
+if (lin_or_nl == 'linear'):
     # linear power spectrum
     P_class = np.array([cosmo_class.pk_lin(ki, z_test) for ki in k])
-elif (lin_or_nl == 'nl'):
+elif (lin_or_nl == 'nonlinear'):
     # nonlinear power spectrum
     P_class = np.array([cosmo_class.pk(ki, z_test) for ki in k])
 
@@ -151,7 +151,7 @@ ax.plot(k, P_class, color='r', label='class')
 ax.set_ylabel('P(k) [Mpc^3]')
 ax.set_xscale('log')
 ax.set_yscale('log')
-ax.set_title('Matter power at z=%s'%(z_test));
+ax.set_title('Matter P(k) comparison for '+cosmology_name+' '+lin_or_nl);
 ax.legend()
 
 ax = axes[1]
