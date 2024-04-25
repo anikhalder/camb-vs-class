@@ -153,4 +153,4 @@ ax.set_xscale('log')
 ax.set_ylim([-0.1,0.1])
 ax.legend()
 
-plt.savefig('./plots/'cosmology_name+'_'+lin_or_nl+'.png')
+plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'.png')
