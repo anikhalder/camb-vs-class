@@ -85,12 +85,11 @@ pars = camb.set_params(H0=100*h, ombh2=omega_b, omch2=omega_cdm,  As=A_s, ns=n_s
 pars.set_matter_power(redshifts=[z_test], kmax=pk_max)
 
 if (lin_or_nl == 'linear'):
-    # linear power spectrum
-    pars.NonLinear = camb.model.NonLinear_none
-
+    pars.NonLinear = camb.model.NonLinear_none # linear power spectrum
 elif (lin_or_nl == 'nonlinear'):
-    # nonlinear power spectrum
-    pars.NonLinear = camb.model.NonLinear_both
+    pars.NonLinear = camb.model.NonLinear_both # nonlinear power spectrum
+else:
+    raise NotImplementedError
 
 results = camb.get_results(pars)
 kh, z, pk_h = results.get_matter_power_spectrum(minkh=1e-4/h, maxkh=kmax/h, npoints=200)
@@ -130,11 +129,11 @@ cosmo_class.set(commonsettings_nl)
 cosmo_class.compute()
 
 if (lin_or_nl == 'linear'):
-    # linear power spectrum
-    P_class = np.array([cosmo_class.pk_lin(ki, z_test) for ki in k])
+    P_class = np.array([cosmo_class.pk_lin(ki, z_test) for ki in k]) # linear power spectrum
 elif (lin_or_nl == 'nonlinear'):
-    # nonlinear power spectrum
-    P_class = np.array([cosmo_class.pk(ki, z_test) for ki in k])
+    P_class = np.array([cosmo_class.pk(ki, z_test) for ki in k]) # nonlinear power spectrum
+else:
+    raise NotImplementedError
 
 end = time.time()
 print('Time taken for execution of CLASS (seconds):', end - start) 
