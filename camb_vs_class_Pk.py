@@ -106,8 +106,11 @@ P_camb = pk_h[0]/h**3
 chi_z_test_camb = results.comoving_radial_distance(z_test)
 print('Comoving distance at z={0:.3f} using CAMB : {1:.4f} Mpc'.format(z_test, chi_z_test_camb))
 
-camb_pk = interp1d(k, P_camb)
 k_array_camb = l_array / chi_z_test_camb
+print('k value corresponding to l={0} : {1:.5f} Mpc^-1 using CAMB'.format(l_array[0], k_array_camb[0]))
+print('k value corresponding to l={0} : {1:.5f} Mpc^-1 using CAMB'.format(l_array[-1], k_array_camb[-1]))
+
+camb_pk = interp1d(k, P_camb)
 Pl_camb = np.array([camb_pk(ki) for ki in k_array_camb])
 
 end = time.time()
@@ -146,13 +149,15 @@ chi_z_test_class = cosmo_class.comoving_distance(z_test)
 print('Comoving distance at z={0:.3f} using CLASS : {1:.4f} Mpc'.format(z_test, chi_z_test_class))
 
 k_array_class = l_array / chi_z_test_camb
+print('k value corresponding to l={0} : {1:.5f} Mpc^-1 using CLASS'.format(l_array[0], k_array_class[0]))
+print('k value corresponding to l={0} : {1:.5f} Mpc^-1 using CLASS'.format(l_array[-1], k_array_class[-1]))
 
 if (lin_or_nl == 'linear'):
     P_class = np.array([cosmo_class.pk_lin(ki, z_test) for ki in k]) # linear power spectrum
-    Pl_class = np.array([cosmo_class.pk_lin(ki) for ki in k_array_class])
+    Pl_class = np.array([cosmo_class.pk_lin(ki, z_test) for ki in k_array_class])
 elif (lin_or_nl == 'nonlinear'):
     P_class = np.array([cosmo_class.pk(ki, z_test) for ki in k]) # nonlinear power spectrum
-    Pl_class = np.array([cosmo_class.pk(ki) for ki in k_array_class])
+    Pl_class = np.array([cosmo_class.pk(ki, z_test) for ki in k_array_class])
 else:
     raise NotImplementedError
 
@@ -161,8 +166,7 @@ print('Time taken for execution of CLASS (seconds):', end - start)
 
 print('\nFractional difference between comoving distance computed by CAMB and CLASS:', chi_z_test_camb/chi_z_test_class - 1) 
 
-print('\nk value corresponding to l={0} : {1:.4f} Mpc^-1'.format(l_array[0], k_array_class[0]))
-print('k value corresponding to l={0} : {1:.4f} Mpc^-1'.format(l_array[-1], k_array_class[-1]))
+
 
 ########################################
 #  Plots
@@ -187,8 +191,8 @@ elif (lin_or_nl == 'nonlinear'):
 else:
     raise NotImplementedError
 
-ax.axvline(k_array[0], color='g', ls='dotted')
-ax.axvline(k_array[-1], color='g', ls='dotted')
+ax.axvline(k_array_class[0], color='g', ls='dotted')
+ax.axvline(k_array_class[-1], color='g', ls='dotted')
 ax.legend()
 
 ax = axes[1]
@@ -199,11 +203,11 @@ ax.set_ylabel('Abs frac. diff')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylim([1e-6,1e-1])
-ax.axvline(k_array[0], color='g', ls='dotted')
-ax.axvline(k_array[-1], color='g', ls='dotted')
+ax.axvline(k_array_class[0], color='g', ls='dotted')
+ax.axvline(k_array_class[-1], color='g', ls='dotted')
 ax.legend(loc='upper left')
 
-plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'.png')
+plt.savefig('./plots/Pk_'+cosmology_name+'_'+lin_or_nl+'.png')
 
 '''
 ##########
@@ -213,8 +217,8 @@ plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'.png')
 fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 2]}, sharex=True)
 
 ax = axes[0]
-ax.plot(l_array, P_camb, color='b', label='camb')
-ax.plot(l_array, P_class, color='r', label='class')
+ax.plot(l_array, Pl_camb, color='b', label='camb')
+ax.plot(l_array, Pl_class, color='r', label='class')
 ax.set_ylabel('P(l) [Mpc$^3$]')
 ax.set_xscale('log')
 ax.set_yscale('log')
@@ -228,7 +232,7 @@ else:
 ax.legend()
 
 ax = axes[1]
-ax.plot(l_array, np.abs((P_camb/P_class - 1)), color='k', label='camb/class - 1')
+ax.plot(l_array, np.abs((Pl_camb/Pl_class - 1)), color='k', label='camb/class - 1')
 ax.axhline(0.01, c='grey', ls='dashed')
 ax.set_xlabel('l')
 ax.set_ylabel('Abs frac. diff')
@@ -237,7 +241,7 @@ ax.set_yscale('log')
 ax.set_ylim([1e-6,1e-1])
 ax.legend(loc='upper left')
 
-plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'_Pl.png')
+plt.savefig('./plots/Pl_'+cosmology_name+'_'+lin_or_nl+'.png')
 '''
 
 end_program = time.time()
