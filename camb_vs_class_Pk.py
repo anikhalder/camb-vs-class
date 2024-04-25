@@ -12,18 +12,16 @@
 #
 # python camb_vs_class_Pk.py LCDM lin
 
+import time
+start_program = time.time()
+
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 import sys
-from scipy.interpolate import interp1d
-
 import camb
-print('Using CAMB %s installed at %s'%(camb.__version__,os.path.dirname(camb.__file__)))
-
 import classy
 from classy import Class
-print('Using CLASS %s installed at %s'%(classy.__version__,os.path.dirname(classy.__file__)))
 
 ########################################
 # Read terminal arguments
@@ -71,20 +69,20 @@ z_test = cosmo_params[5]
 omega_b = Omega_b*h**2
 omega_cdm = Omega_cdm*h**2
 
-num_massive_neutrinos = 0
-mnu = 0.0
-
-k = np.logspace(-4, np.log10(1.5), num=100) # Mpc^-1
-
-kmax = 50.0
+pk_max = 130.0
+kmax = 100.0
 
 ########################################
 #  CAMB
 ########################################
 
+start = time.time()
+
+print('Using CAMB %s installed at %s'%(camb.__version__,os.path.dirname(camb.__file__)))
+
 pars = camb.set_params(H0=100*h, ombh2=omega_b, omch2=omega_cdm,  As=A_s, ns=n_s, w=w0, halofit_version='mead', HMCode_A_baryon=c_min, HMCode_eta_baryon=eta_0,
-     num_massive_neutrinos=num_massive_neutrinos, mnu=mnu)
-pars.set_matter_power(redshifts=[z_test], kmax=kmax+50) # manually setting kmax to a larger value for better interpolation
+     num_massive_neutrinos=0, mnu=0.0)
+pars.set_matter_power(redshifts=[z_test], kmax=pk_max)
 
 if (lin_or_nl == 'lin' or lin_or_nl == 'linear'):
     # linear power spectrum
@@ -95,13 +93,20 @@ elif (lin_or_nl == 'nl' or lin_or_nl == 'nonlinear'):
     pars.NonLinear = camb.model.NonLinear_both
 
 results = camb.get_results(pars)
-kh, z, pk_h = results.get_matter_power_spectrum(minkh=1e-5, maxkh=kmax+20.0, npoints=300) # manually setting minkh and maxkh to a wider range for better interpolation
-camb_pk = interp1d(kh*h, pk_h[0]/h**3)
-P_camb = np.array([camb_pk(ki) for ki in k])
+kh, z, pk_h = results.get_matter_power_spectrum(minkh=1e-4/h, maxkh=kmax/h, npoints=200)
+k = kh*h # Mpc^-1
+P_camb = pk_h[0]/h**3
+
+end = time.time()
+print('Time taken for execution of CAMB (seconds):', end - start) 
 
 ########################################
 #  CLASS
 ########################################
+
+start = time.time()
+
+print('\nUsing CLASS %s installed at %s'%(classy.__version__,os.path.dirname(classy.__file__)))
 
 commonsettings_nl  = {
     'h':h,
@@ -113,7 +118,7 @@ commonsettings_nl  = {
     'Omega_Lambda':0.0,
     'w0_fld':w0,
     'output':'mPk',
-    'P_k_max_1/Mpc':kmax,
+    'P_k_max_1/Mpc':pk_max,
     'z_max_pk':z_test + 0.5, # manually setting this to larger than the desired redshift for better interpolation
     'non linear':'hmcode',
     'eta_0':eta_0,
@@ -130,6 +135,9 @@ if (lin_or_nl == 'lin'):
 elif (lin_or_nl == 'nl'):
     # nonlinear power spectrum
     P_class = np.array([cosmo_class.pk(ki, z_test) for ki in k])
+
+end = time.time()
+print('Time taken for execution of CLASS (seconds):', end - start) 
 
 ########################################
 #  Plots
@@ -153,7 +161,10 @@ ax.set_xlabel('k [Mpc]')
 ax.set_ylabel('Abs frac. diff')
 ax.set_xscale('log')
 ax.set_yscale('log')
-ax.set_ylim([1e-6,5e-2])
-ax.legend(loc='lower right')
+ax.set_ylim([1e-6,1e-1])
+ax.legend(loc='upper left')
 
 plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'.png')
+
+end_program = time.time()
+print('\nTime taken for execution of the whole script (seconds):', end_program - start_program) 
