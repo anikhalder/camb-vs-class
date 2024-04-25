@@ -1,6 +1,12 @@
 # camb-vs-class
 Scripts to compare quantities between CAMB and CLASS
 
+First, please make sure to install the python packages of these two software. See installation instructions in these links:
+
+CAMB: https://camb.readthedocs.io/en/latest/
+
+CLASS: https://github.com/lesgourg/class_public/tree/master 
+
 ## Power spectrum
 
 **camb_vs_class_Pk.py** compares the power spectrum (linear or nonlinear)  computed by the two codes (check description at the top of the file to see how to use it).
