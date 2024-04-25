@@ -52,7 +52,9 @@ cosmo_params = cosmo_dict[cosmology_name]
 Omega_b = 0.046
 Omega_m = cosmo_params[0]
 Omega_cdm = Omega_m - Omega_b
-A_s = np.exp(cosmo_params[1]) / 1e10
+
+ln10e10As = cosmo_params[1]
+A_s = np.exp(ln10e10As) / 1e10
 n_s = 0.965
 
 w0 = cosmo_params[2]
@@ -69,7 +71,10 @@ z_test = cosmo_params[5]
 omega_b = Omega_b*h**2
 omega_cdm = Omega_cdm*h**2
 
-k = np.logspace(-4, np.log10(1.5), num=100) #Mpc^-1
+num_massive_neutrinos = 0
+mnu = 0.0
+
+k = np.logspace(-4, np.log10(1.5), num=100) # Mpc^-1
 
 kmax = 50.0
 
@@ -77,8 +82,8 @@ kmax = 50.0
 #  CAMB
 ########################################
 
-pars = camb.set_params(H0=100*h, ombh2=omega_b, omch2=omega_cdm, As=A_s, ns=n_s, halofit_version='mead', HMCode_A_baryon=c_min, HMCode_eta_baryon=eta_0 )
-pars.set_dark_energy(w=w0, cs2=1.0, wa=0, dark_energy_model='fluid')
+pars = camb.set_params(H0=100*h, ombh2=omega_b, omch2=omega_cdm,  As=A_s, ns=n_s, w=w0, halofit_version='mead', HMCode_A_baryon=c_min, HMCode_eta_baryon=eta_0,
+     num_massive_neutrinos=num_massive_neutrinos, mnu=mnu)
 pars.set_matter_power(redshifts=[z_test], kmax=kmax+50) # manually setting kmax to a larger value for better interpolation
 
 if (lin_or_nl == 'lin' or lin_or_nl == 'linear'):
@@ -102,12 +107,11 @@ commonsettings_nl  = {
     'h':h,
     'omega_b':omega_b,
     'omega_cdm': omega_cdm,
+    #'ln10^{10}A_s':ln10e10As,
     'A_s':A_s,
     'n_s':n_s,
     'Omega_Lambda':0.0,
-    'fluid_equation_of_state':'CLP',
     'w0_fld':w0,
-    'wa_fld':0.0,
     'output':'mPk',
     'P_k_max_1/Mpc':kmax,
     'z_max_pk':z_test + 0.5, # manually setting this to larger than the desired redshift for better interpolation
@@ -131,7 +135,7 @@ elif (lin_or_nl == 'nl'):
 #  Plots
 ########################################
 
-fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [2, 1]}, sharex=True)
+fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 2]}, sharex=True)
 
 ax = axes[0]
 ax.plot(k, P_camb, color='b', label='camb')
@@ -143,14 +147,13 @@ ax.set_title('Matter power at z=%s'%(z_test));
 ax.legend()
 
 ax = axes[1]
-ax.plot(k, P_camb/P_class - 1, color='b', label='camb/class - 1')
-ax.axhline(0.05, c='grey', ls='dashed')
-ax.axhline(0.0, c='grey', ls='dotted')
-ax.axhline(-0.05, c='grey', ls='dashed')
+ax.plot(k, np.abs((P_camb/P_class - 1)), color='b', label='camb/class - 1')
+ax.axhline(0.01, c='grey', ls='dashed')
 ax.set_xlabel('k [Mpc]')
-ax.set_ylabel('frac. diff')
+ax.set_ylabel('Abs frac. diff')
 ax.set_xscale('log')
-ax.set_ylim([-0.1,0.1])
-ax.legend()
+ax.set_yscale('log')
+ax.set_ylim([1e-6,5e-2])
+ax.legend(loc='lower right')
 
 plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'.png')
