@@ -30,6 +30,8 @@ from classy import Class
 cosmology_name = sys.argv[1]
 lin_or_nl = sys.argv[2]
 
+print('\nPerforming computations at node '+cosmology_name+' for '+lin_or_nl+' power spectrum')
+
 ########################################
 # Parameters
 ########################################
@@ -78,7 +80,7 @@ kmax = 100.0
 
 start = time.time()
 
-print('Using CAMB %s installed at %s'%(camb.__version__,os.path.dirname(camb.__file__)))
+print('\nUsing CAMB version %s installed at %s'%(camb.__version__,os.path.dirname(camb.__file__)))
 
 pars = camb.set_params(H0=100*h, ombh2=omega_b, omch2=omega_cdm,  As=A_s, ns=n_s, w=w0, halofit_version='mead', HMCode_A_baryon=c_min, HMCode_eta_baryon=eta_0,
      num_massive_neutrinos=0, mnu=0.0)
@@ -105,7 +107,7 @@ print('Time taken for execution of CAMB (seconds):', end - start)
 
 start = time.time()
 
-print('\nUsing CLASS %s installed at %s'%(classy.__version__,os.path.dirname(classy.__file__)))
+print('\nUsing CLASS version %s installed at %s'%(classy.__version__,os.path.dirname(classy.__file__)))
 
 commonsettings_nl  = {
     'h':h,
@@ -167,3 +169,5 @@ plt.savefig('./plots/'+cosmology_name+'_'+lin_or_nl+'.png')
 
 end_program = time.time()
 print('\nTime taken for execution of the whole script (seconds):', end_program - start_program) 
+
+print('\n##############################')
