@@ -2,5 +2,5 @@
 *
 # Except this file
 !.gitignore
-!LCDM_linear.png
-!LCDM_nonlinear.png
+#!LCDM_linear.png
+#!LCDM_nonlinear.png
